@@ -1,33 +1,35 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
-from pydantic import BaseModel
 
-from telecom_analytics.generator import generate_customers
-from telecom_analytics.model import ChurnModel
+from telecom_analytics.config import settings
+from telecom_analytics.schemas import CustomerInsight, CustomerProfile, HealthResponse
+from telecom_analytics.service import CustomerAnalyticsService
 
-app = FastAPI(title='Telecom Customer Analytics API')
+app = FastAPI(
+    title='Telecom Customer Analytics API',
+    description='Production-style telecom customer intelligence API for churn risk, segmentation, and retention actions.',
+    version='0.2.0',
+)
 
-_model = ChurnModel()
-_model.fit(generate_customers(800))
-
-
-class Customer(BaseModel):
-    tenure_months: int
-    monthly_charges: float
-    data_usage_gb: float
-    support_tickets: int
-    month_to_month: int = 1
-    churn: int = 0
+_service = CustomerAnalyticsService()
 
 
-@app.get('/health')
-def health() -> dict:
-    return {'status': 'ok'}
+@app.get('/health', response_model=HealthResponse)
+def health() -> HealthResponse:
+    return HealthResponse(
+        status='ok',
+        service_name=settings.service_name,
+        environment=settings.environment,
+        model_version=settings.model_version,
+    )
 
 
-@app.post('/churn-risk')
-def churn_risk(customer: Customer) -> dict:
-    payload = customer.model_dump()
-    risk = _model.predict_risk(payload)
-    return {'churn_risk': risk, 'high_risk': risk >= 0.5}
+@app.post('/customers/insights', response_model=CustomerInsight)
+def customer_insights(customer: CustomerProfile) -> CustomerInsight:
+    return _service.analyze(customer)
+
+
+@app.post('/churn-risk', response_model=CustomerInsight)
+def churn_risk(customer: CustomerProfile) -> CustomerInsight:
+    return _service.analyze(customer)
