@@ -2,6 +2,12 @@
 
 Deployable customer intelligence platform for telecom retention teams. The system combines churn prediction, customer segmentation, risk banding, and recommended retention actions behind a production-style FastAPI service and a premium React command center.
 
+## Product Demo Video
+
+
+https://github.com/user-attachments/assets/006988a4-3ce5-49ba-9006-5aeae4750812
+
+
 ## Core Capabilities
 
 - Synthetic telecom customer dataset generation for local demo mode
